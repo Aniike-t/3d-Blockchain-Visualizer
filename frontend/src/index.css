@@ -256,3 +256,71 @@ canvas {
     background-color: rgba(224, 108, 117, 0.1);
     border: 1px solid rgba(224, 108, 117, 0.3);
 }
+
+.info-panel .tamper-warning {
+  background-color: rgba(224, 108, 117, 0.2); /* Light red background */
+  border: 1px solid #e06c75; /* Red border */
+  color: #e06c75; /* Red text */
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Save Button in InfoPanel */
+.info-panel .tamper-save-button {
+  display: block; /* Place on new line */
+  width: calc(95% + 10px); /* Match textarea width roughly */
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #e06c75; /* Reddish */
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.info-panel .tamper-save-button:hover {
+  background-color: #c75560;
+}
+
+/* Style textarea in InfoPanel */
+.info-panel .info-item.data textarea {
+  background-color: rgba(0,0,0,0.15);
+  border: 1px solid #4f5666;
+  color: #abb2bf;
+  border-radius: 4px;
+  padding: 5px;
+  margin-top: 5px;
+
+  min-width: 95%;
+  max-width: 95%; /* Prevent overflow */
+  max-height: 100px;
+  min-height: 100px;
+
+}
+.info-panel .info-item.data textarea:focus {
+  border-color: #61dafb;
+  outline: none;
+}
+.info-panel .info-item.data textarea:disabled {
+  background-color: rgba(0,0,0,0.1);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Controls Panel adjustments if needed */
+.controls-panel button {
+  /* Add minimum width? */
+  min-width: 100px;
+  text-align: center;
+}
+
+.validation-status.validating {
+  color: #e5c07b; /* Yellowish */
+  background-color: rgba(229, 192, 123, 0.1);
+  border: 1px solid rgba(229, 192, 123, 0.3);
+  font-style: italic;
+}

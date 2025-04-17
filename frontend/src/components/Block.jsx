@@ -1,84 +1,102 @@
-// --- Block.jsx (No changes from the previous feature-rich version) ---
+// --- Block.jsx (Change Color Based on Validity) ---
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 
-const Block = ({ position, blockData, onClick, isSelected }) => {
+// Added isChainValid prop
+const Block = ({ position, blockData, onClick, isSelected, isChainValid }) => {
   const meshRef = useRef();
   const [hovered, setHover] = useState(false);
-
-  // Use state for target scale to handle selection/hover priority
   const [targetScale, setTargetScale] = useState(1);
 
+  // Determine base color based on validity AND genesis status
+  const baseColor = isChainValid
+      ? (blockData.index === 0 ? '#61dafb' : '#98c379') // Normal valid colors
+      : '#e06c75'; // Invalid color (reddish)
+
+   // Determine emissive color based on validity
+   const emissiveBaseColor = isChainValid
+        ? (blockData.index === 0 ? '#30a0c0' : '#60a050')
+        : '#a04040'; // Darker red emissive for invalid
+
+
   useEffect(() => {
-      setTargetScale(isSelected ? 1.2 : (hovered ? 1.1 : 1));
-  }, [isSelected, hovered]);
+      // Hover/selection only affects scale if block is valid
+      setTargetScale(isChainValid && isSelected ? 1.2 : (isChainValid && hovered ? 1.1 : 1));
+  }, [isSelected, hovered, isChainValid]);
 
 
   useFrame((state, delta) => {
     if (meshRef.current) {
-      // Lerp scale smoothly
-      meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 8); // Faster lerp
+      meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 8);
 
-       // Lerp emissive intensity smoothly based on selection/hover
-       const targetEmissiveIntensity = isSelected ? 0.8 : (hovered ? 0.4 : 0);
+       // Lerp emissive intensity smoothly based on selection/hover (only if valid)
+       const targetEmissiveIntensity = isChainValid && isSelected ? 0.8 : (isChainValid && hovered ? 0.4 : 0);
        meshRef.current.material.emissiveIntensity = THREE.MathUtils.lerp(
            meshRef.current.material.emissiveIntensity,
            targetEmissiveIntensity,
            delta * 8
        );
+
+        // Update color instantly if validity changes (could lerp too)
+        meshRef.current.material.color.set(baseColor);
+        meshRef.current.material.emissive.set(emissiveBaseColor);
     }
   });
 
   const handleClick = (event) => {
-    event.stopPropagation(); // Prevent triggering canvas/background events
+    event.stopPropagation();
+     // Allow clicking even if invalid, to see details
     onClick(blockData);
   };
 
   const handlePointerOver = (event) => {
       event.stopPropagation();
-      setHover(true);
-      document.body.style.cursor = 'pointer'; // Indicate clickable
+      // Only hover effect if valid
+       if (isChainValid) {
+            setHover(true);
+            document.body.style.cursor = 'pointer';
+       } else {
+            document.body.style.cursor = 'not-allowed'; // Indicate invalid
+       }
   };
 
   const handlePointerOut = (event) => {
-      setHover(false);
-       document.body.style.cursor = 'grab'; // Revert to default grab cursor
+       if (isChainValid) {
+           setHover(false);
+       }
+       // Revert cursor regardless
+       document.body.style.cursor = 'default'; // Use default, not grab
   };
 
-  const blockColor = blockData.index === 0 ? '#61dafb' : '#98c379'; // Genesis vs Normal
-  const emissiveColor = blockData.index === 0 ? '#30a0c0' : '#60a050'; // Darker shade for emission
-
   return (
-    // Group takes the position, mesh is centered within the group
     <group position={position}>
       <mesh
         ref={meshRef}
         onClick={handleClick}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
-        castShadow
+        castShadow // Keep shadows even if invalid
         receiveShadow
       >
         <boxGeometry args={[1, 1, 1]} />
+        {/* Material color/emissive set dynamically in useFrame */}
         <meshStandardMaterial
-          color={blockColor}
+          // Initial colors set here, but overridden by useFrame
+          color={baseColor}
           metalness={0.3}
           roughness={0.6}
-          emissive={emissiveColor} // Base emissive color
-          emissiveIntensity={0} // Initial intensity, controlled by useFrame
+          emissive={emissiveBaseColor}
+          emissiveIntensity={0}
         />
       </mesh>
-       {/* Display Block Index */}
        <Text
-         position={[0, 0.7, 0]} // Position above the block
-         fontSize={0.15}
-         color="white"
-         anchorX="center"
-         anchorY="middle"
-         outlineWidth={0.01}
-         outlineColor="black"
+         position={[0, 0.9, 0]}
+         fontSize={0.50}
+         color={isChainValid ? "white" : "#ffdddd"} // Dim text if invalid
+         anchorX="center" anchorY="middle"
+         outlineWidth={0.01} outlineColor="black"
        >
          #{blockData.index}
        </Text>

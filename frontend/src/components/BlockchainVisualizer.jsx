@@ -54,7 +54,7 @@ const BlockchainVisualizer = ({
     return (
         <Canvas shadows style={{ background: '#282c34' }}>
             {/* Camera, Controls, Controller, Lighting, Ground (no change) */}
-            <OrthographicCamera makeDefault zoom={50} position={[15, 20, 15]} left={-window.innerWidth / 40} right={window.innerWidth / 40} top={window.innerHeight / 40} bottom={-window.innerHeight / 40} near={0.1} far={1000}/>
+            <OrthographicCamera makeDefault zoom={5} position={[-40, 20, 20]} left={-window.innerWidth / 40} right={window.innerWidth / 40} top={window.innerHeight / 40} bottom={-window.innerHeight / 40} near={0.1} far={1000}/>
             <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} enableDamping={true} dampingFactor={0.1} />
             <CameraController targetPosition={cameraTargetPosition} />
             <ambientLight intensity={0.7} />

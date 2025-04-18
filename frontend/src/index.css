@@ -1,4 +1,4 @@
-/* --- index.css (No changes from the previous feature-rich version) --- */
+/* --- index.css --- */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -6,321 +6,364 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #282c34;
+  background-color: #282c34; /* Match canvas background */
   color: #abb2bf;
-  overflow: hidden;
+  overflow: hidden; /* Prevent body scroll */
 }
 
-canvas {
-  display: block;
+#root {
+  /* Remove default centering and padding */
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: left; /* Reset text align */
 }
 
-/* Info Panel */
-.info-panel {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: rgba(40, 44, 52, 0.9);
-  border: 1px solid #4f5666;
-  border-radius: 8px;
-  padding: 15px 20px;
-  width: 300px;
-  max-width: calc(100vw - 40px); /* Prevent overflow on small screens */
-  max-height: calc(100vh - 160px);
-  overflow-y: auto;
-  color: #abb2bf;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-  font-size: 0.9em;
-   scrollbar-width: thin; /* Firefox */
-   scrollbar-color: #61afef #282c34; /* Firefox */
-}
-.info-panel::-webkit-scrollbar { /* Chrome/Safari/Edge */
-  width: 8px;
-}
-.info-panel::-webkit-scrollbar-track {
-  background: #282c34;
-}
-.info-panel::-webkit-scrollbar-thumb {
-  background-color: #61afef;
-  border-radius: 4px;
-  border: 2px solid #282c34;
-}
-
-
-.info-panel h2 {
-  margin-top: 0;
-  color: #61dafb;
-  font-size: 1.2em;
-  border-bottom: 1px solid #4f5666;
-  padding-bottom: 5px;
-  margin-bottom: 10px;
-}
-
-.info-panel p, .info-panel .info-item {
-  margin-bottom: 10px;
-  line-height: 1.4;
-}
-
-.info-panel strong {
-    color: #98c379;
-    margin-right: 5px;
-    display: inline-block;
-    min-width: 80px; /* Adjust as needed for alignment */
-}
-
-.info-panel .info-item span, .info-panel .info-item pre {
-    word-break: break-word;
-    white-space: pre-wrap;
-    display: inline-block;
-    vertical-align: top;
-    /* Ensure the value part doesn't exceed panel width */
-    max-width: calc(100% - 90px); /* Approx width of label + margin */
-}
-
-.info-panel .info-item.hash pre {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.9em;
-    color: #e5c07b;
-}
-.info-panel .info-item.data pre {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.9em;
-    color: #c678dd;
-    background-color: rgba(0,0,0,0.1);
-    padding: 5px;
-    border-radius: 4px;
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.info-panel .wireframe-text {
-    border: 1px dashed #ccc;
-    padding: 0 3px;
-    border-radius: 3px;
-    font-family: monospace;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* Add Block Form */
-.add-block-form {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: rgba(40, 44, 52, 0.9);
-  border: 1px solid #4f5666;
-  border-radius: 8px;
-  padding: 15px;
+/* --- Layout --- */
+.main-layout {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  width: 100vw;
+  height: 100vh;
 }
 
-.add-block-form input[type="text"] {
+.left-panel {
+  width: 400px; /* Fixed width for info/forms */
+  padding: 15px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  margin: 10px;
+  border-radius: 15px;
+  gap: 15px; /* Space between panels */
+  overflow-y: auto; /* Scroll if content overflows */
+  background-color: #353a44; /* Slightly different background */
+  border-right: 1px solid #4f5666;
+}
+
+.right-panel {
+  flex-grow: 1; /* Take remaining width */
+  display: flex;
+  flex-direction: column;
+  position: relative; /* For positioning controls */
+}
+
+.visualizer-container {
+   flex-grow: 1; /* Canvas takes available space */
+   min-height: 0; /* Prevent flexbox overflow issues */
+}
+
+/* --- Controls Panel --- */
+.controls-panel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(40, 44, 52, 0.8);
   padding: 8px 12px;
-  border-radius: 4px;
+  border-radius: 6px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 10;
   border: 1px solid #4f5666;
-  background-color: #3a3f4b;
-  color: #abb2bf;
-  min-width: 200px;
-  outline: none;
-}
-.add-block-form input[type="text"]:focus {
-    border-color: #61dafb;
-}
-.add-block-form input[type="text"]:disabled {
-    background-color: #4f5666;
-    cursor: not-allowed;
 }
 
-.add-block-form button {
-  padding: 8px 15px;
-  border-radius: 4px;
-  border: none;
+.controls-panel button {
   background-color: #61afef;
   color: #282c34;
-  font-weight: bold;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
   cursor: pointer;
+  font-weight: bold;
   transition: background-color 0.2s ease;
 }
 
-.add-block-form button:hover:not(:disabled) {
-  background-color: #528baf;
+.controls-panel button:hover:not(:disabled) {
+  background-color: #5295cc;
 }
 
-.add-block-form button:disabled {
+.controls-panel button:disabled {
   background-color: #5c6370;
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.add-block-form .spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 1s ease-in-out infinite;
-  margin-left: 5px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Status Indicators */
-.status-indicator {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 15px 25px;
-    border-radius: 8px;
-    font-size: 1.2em;
-    font-weight: bold;
-    text-align: center;
-    z-index: 20;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
-    max-width: 80%;
-}
-
-.status-indicator.loading {
-    background-color: rgba(97, 218, 251, 0.9);
-    color: #282c34;
-}
-.status-indicator.mining {
-    background-color: rgba(229, 192, 123, 0.9);
-    color: #282c34;
-}
-.status-indicator.error {
-    background-color: rgba(224, 108, 117, 0.9);
-    color: #ffffff;
-    white-space: pre-wrap;
-}
-.status-indicator.info {
-    background-color: rgba(92, 99, 112, 0.9);
-    color: #ffffff;
-}
-
-/* Controls Panel */
-.controls-panel {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(40, 44, 52, 0.9);
-    border: 1px solid #4f5666;
-    border-radius: 8px;
-    padding: 10px 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    z-index: 10;
-}
-
-.controls-panel button {
-    padding: 6px 12px;
-    border-radius: 4px;
-    border: none;
-    background-color: #98c379;
-    color: #282c34;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.controls-panel button:hover:not(:disabled) {
-    background-color: #80a867;
-}
-.controls-panel button:disabled {
-    background-color: #5c6370;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
 .validation-status {
-    font-weight: bold;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.validation-status.valid {
+  color: #98c379; /* Green */
+  /* background-color: rgba(152, 195, 121, 0.1); */
+}
+
+.validation-status.invalid {
+  color: #e06c75; /* Red */
+  /* background-color: rgba(224, 108, 117, 0.1); */
+}
+
+.difficulty-display,
+.mempool-display {
+    font-size: 0.9em;
+    color: #abb2bf;
+    background-color: rgba(82, 89, 102, 0.5);
     padding: 4px 8px;
     border-radius: 4px;
 }
-.validation-status.valid {
-    color: #98c379;
-    background-color: rgba(152, 195, 121, 0.1);
-    border: 1px solid rgba(152, 195, 121, 0.3);
-}
-.validation-status.invalid {
-    color: #e06c75;
-    background-color: rgba(224, 108, 117, 0.1);
-    border: 1px solid rgba(224, 108, 117, 0.3);
-}
 
-.info-panel .tamper-warning {
-  background-color: rgba(224, 108, 117, 0.2); /* Light red background */
-  border: 1px solid #e06c75; /* Red border */
-  color: #e06c75; /* Red text */
-  padding: 8px 12px;
-  border-radius: 4px;
-  margin-bottom: 15px;
-  font-weight: bold;
-  text-align: center;
-}
 
-/* Save Button in InfoPanel */
-.info-panel .tamper-save-button {
-  display: block; /* Place on new line */
-  width: calc(95% + 10px); /* Match textarea width roughly */
-  margin-top: 8px;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 4px;
-  background-color: #e06c75; /* Reddish */
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-.info-panel .tamper-save-button:hover {
-  background-color: #c75560;
-}
-
-/* Style textarea in InfoPanel */
-.info-panel .info-item.data textarea {
-  background-color: rgba(0,0,0,0.15);
+/* --- Info Panel --- */
+.info-panel {
+  background-color: #2c313a;
+  padding: 15px;
+  border-radius: 8px;
   border: 1px solid #4f5666;
+}
+
+.info-panel h2 {
+  margin-top: 0;
+  color: #61dafb;
+  border-bottom: 1px solid #4f5666;
+  padding-bottom: 5px;
+}
+
+.info-item {
+  margin-bottom: 10px;
+  font-size: 0.9em;
+}
+
+.info-item strong {
+  color: #c678dd; /* Purple */
+  margin-right: 8px;
+  display: block; /* Make label above value */
+  margin-bottom: 3px;
+}
+
+.info-item span, .info-item pre {
   color: #abb2bf;
+  word-wrap: break-word; /* Wrap long strings */
+   white-space: pre-wrap; /* Respect newlines in pre */
+}
+
+.info-item.hash pre {
+  background-color: #353a44;
+  padding: 5px;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85em;
+  max-height: 60px; /* Limit height */
+  overflow-y: auto; /* Scroll if needed */
+}
+
+.info-item.data textarea {
+  background-color: #21252b;
+  color: #98c379; /* Green for data */
+  border: 1px solid #4f5666;
   border-radius: 4px;
   padding: 5px;
-  margin-top: 5px;
-
-  min-width: 95%;
-  max-width: 95%; /* Prevent overflow */
-  max-height: 100px;
-  min-height: 100px;
-
+  margin-top: 3px;
 }
-.info-panel .info-item.data textarea:focus {
-  border-color: #61dafb;
-  outline: none;
+
+.info-item.data textarea:read-only {
+    background-color: #353a44;
+    cursor: not-allowed;
+    opacity: 0.8;
 }
-.info-panel .info-item.data textarea:disabled {
-  background-color: rgba(0,0,0,0.1);
+
+.tamper-save-button {
+  display: block;
+  margin-top: 8px;
+  background-color: #e06c75; /* Reddish */
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.tamper-save-button:hover {
+    background-color: #c75560;
+}
+
+.tamper-warning {
+    background-color: #e06c75;
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* --- Mempool Panel --- */
+.mempool-panel {
+  background-color: #2c313a;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #4f5666;
+}
+.mempool-panel.empty {
+    text-align: center;
+    color: #777;
+}
+
+.mempool-panel h4 {
+  margin-top: 0;
+  color: #e5c07b; /* Yellowish */
+  border-bottom: 1px solid #4f5666;
+  padding-bottom: 5px;
+}
+
+.mempool-panel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 150px; /* Limit height */
+  overflow-y: auto; /* Scroll if many tx */
+}
+
+.mempool-panel li {
+  background-color: #353a44;
+  padding: 8px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  display: flex; /* Use flexbox for alignment */
+  justify-content: space-between; /* Space out elements */
+  gap: 10px; /* Gap between elements */
+  flex-wrap: wrap; /* Allow wrapping on small screens if needed */
+}
+.mempool-panel li span {
+   white-space: nowrap; /* Prevent text wrapping within spans */
+   overflow: hidden;
+   text-overflow: ellipsis; /* Add ellipsis if text overflows */
+}
+
+
+/* --- Transaction Form --- */
+.transaction-form {
+   background-color: #2c313a;
+   padding: 15px;
+   border-radius: 8px;
+   border: 1px solid #4f5666;
+}
+
+.transaction-form h3 {
+   margin-top: 0;
+   color: #56b6c2; /* Cyan */
+   border-bottom: 1px solid #4f5666;
+   padding-bottom: 5px;
+   margin-bottom: 15px;
+}
+
+.transaction-form input {
+  display: block;
+  width: calc(100% - 16px); /* Full width minus padding */
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #4f5666;
+  background-color: #21252b;
+  color: #abb2bf;
+  border-radius: 4px;
+}
+
+.transaction-form button {
+  background-color: #98c379; /* Green */
+  color: #282c34;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.transaction-form button:hover:not(:disabled) {
+  background-color: #80a965;
+}
+
+.transaction-form button:disabled {
+  background-color: #5c6370;
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-/* Controls Panel adjustments if needed */
-.controls-panel button {
-  /* Add minimum width? */
-  min-width: 100px;
-  text-align: center;
+
+/* --- Status Indicators --- */
+.status-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0; /* Position relative to right-panel */
+    width: calc(100% - 20px); /* Adjust width considering padding/margin */
+    display: flex;
+    justify-content: flex-end; /* Align items to the right */
+    padding: 5px 10px;
+    gap: 10px;
+    pointer-events: none; /* Allow clicks to pass through */
 }
 
-.validation-status.validating {
-  color: #e5c07b; /* Yellowish */
-  background-color: rgba(229, 192, 123, 0.1);
-  border: 1px solid rgba(229, 192, 123, 0.3);
-  font-style: italic;
+.status-indicator {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: bold;
+  z-index: 5; /* Below controls */
+   /* Make them semi-transparent */
+  background-color: rgba(40, 44, 52, 0.7);
+  border: 1px solid rgba(79, 86, 102, 0.7);
+}
+
+.status-indicator.loading {
+  color: #61afef; /* Blue */
+}
+
+.status-indicator.mining {
+  color: #e5c07b; /* Yellow */
+}
+
+.status-indicator.error {
+  color: #e06c75; /* Red */
+  background-color: rgba(224, 108, 117, 0.7); /* More prominent error background */
+  pointer-events: all; /* Allow interaction if needed */
+}
+
+.status-indicator.info {
+  color: #abb2bf; /* Default text color */
+}
+
+/* --- Remove AddBlockForm specific styles if any --- */
+.add-block-form { display: none; } /* Hide old form */
+.spinner { display: none; } /* Hide old spinner */
+
+/* --- Wireframe Text (Example) --- */
+.wireframe-text {
+    font-family: monospace;
+    color: #61dafb;
+}
+
+
+/* Ensure Canvas takes up space */
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+
+/* For Webkit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 0px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+}
+
+/* Optional for Firefox */
+* {
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
 }

@@ -1,156 +1,149 @@
-// --- GhostBlock.jsx (With Assembly Animation) ---
+// --- GhostBlock.jsx (Updated Text & Interaction) ---
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 
-// Speed control for the assembly animation (higher means faster)
-const ASSEMBLY_SPEED = 0.8; // e.g., takes ~1 / 0.8 = 1.25 seconds to fully assemble
+const ASSEMBLY_SPEED = 0.8;
 
-const GhostBlock = ({ position, onMine, isMining }) => {
-  const groupRef = useRef(); // Ref for the group to adjust position
+// Added mempoolSize prop
+const GhostBlock = ({ position, onMine, isMining, mempoolSize }) => {
+  const groupRef = useRef();
   const meshRef = useRef();
-  const textRef = useRef(); // Ref for the text to adjust its position
+  const textRef = useRef();
   const [hovered, setHover] = useState(false);
+  const animationProgress = useRef(isMining ? 0 : 1);
 
-  // Ref to track the animation progress (0 = not started, 1 = fully assembled)
-  const animationProgress = useRef(isMining ? 0 : 1); // Start at 0 if initially mining, else 1
+  // Determine if mining is possible (mempool has items)
+  const canMine = mempoolSize > 0;
+  const hoverText = canMine ? '+ Mine Pending Tx' : 'Mempool Empty';
+  const miningText = 'MINING...';
 
-  // Reset animation when isMining status changes
-  useEffect(() => {
-    if (isMining) {
-      // Start assembling from the bottom
-      animationProgress.current = 0;
-      if (meshRef.current) {
-        // Instantly set scale/position for the start of mining animation
-         meshRef.current.scale.y = 0;
-         // Position the group so the base is on the ground plane
-         // A unit cube's base is at y = -0.5. When scale.y=0, center is at y=0.
-         // We want the eventual base at y=-0.5, so initial center y should be -0.5
-         if(groupRef.current) groupRef.current.position.y = -0.5;
+  // Reset animation based on mining status
+   useEffect(() => {
+    // ... (animation reset logic remains the same as before) ...
+      if (isMining) {
+          animationProgress.current = 0;
+          if (meshRef.current) { meshRef.current.scale.y = 0; }
+          if (groupRef.current) { groupRef.current.position.y = -0.5; }
+          if (textRef.current) { textRef.current.position.y = 0.1; }
+      } else {
+          animationProgress.current = 1;
+          if (meshRef.current) { meshRef.current.scale.y = 1; }
+          if (groupRef.current) { groupRef.current.position.y = 0; }
+          if (textRef.current) { textRef.current.position.y = 0; } // Centered relative to group
       }
-       if (textRef.current) {
-            // Initial text position slightly above the base
-            textRef.current.position.y = 0.1;
-       }
-
-    } else {
-      // Instantly set to fully assembled state when not mining
-      animationProgress.current = 1;
-       if (meshRef.current) {
-           meshRef.current.scale.y = 1;
-       }
-       if (groupRef.current) {
-            // Group position needs to be 0 for a centered unit cube
-            groupRef.current.position.y = 0;
-       }
-       if (textRef.current) {
-            // Reset text position relative to the full block
-            textRef.current.position.y = 0; // Centered vertically relative to group
-       }
-    }
-  }, [isMining]); // Dependency: run when mining status changes
+   }, [isMining]);
 
 
   useFrame((state, delta) => {
-    if (!meshRef.current || !groupRef.current || !textRef.current) return; // Refs not ready
+    if (!meshRef.current || !groupRef.current || !textRef.current) return;
 
-    const targetColor = new THREE.Color(isMining ? "#ffcc00" : "#ffffff");
-    let targetOpacity = isMining ? 0.7 : (hovered ? 0.9 : 0.7);
-    let targetEmissiveIntensity = isMining ? 0.6 : (hovered ? 0.4 : 0.2);
-    const targetEmissiveColor = new THREE.Color(isMining ? "#ffaa00" : (hovered ? "#cccccc" : "#999999"));
+    // --- Visual states ---
+    const isIdleAndEmpty = !isMining && !canMine;
+    const isIdleAndReady = !isMining && canMine;
+
+    let targetColor = new THREE.Color("#ffffff"); // Default idle/ready
+    let targetOpacity = 0.7;
+    let targetEmissiveIntensity = 0.2;
+    let targetEmissiveColor = new THREE.Color("#999999");
+    let targetWireframe = true;
+    let targetScaleX = 1.0;
+    let targetScaleZ = 1.0;
 
     if (isMining) {
-      // --- Assembly Animation ---
-      if (animationProgress.current < 1) {
-        animationProgress.current = Math.min(1, animationProgress.current + delta * ASSEMBLY_SPEED);
-      }
-      // Apply scale based on progress
-      meshRef.current.scale.y = animationProgress.current;
+        // --- Mining Animation ---
+        targetColor = new THREE.Color("#ffcc00");
+        targetEmissiveColor = new THREE.Color("#ffaa00");
+        targetWireframe = false; // Solid during mining
 
-      // Adjust group position so the base stays put while scaling up
-      // Base is at y = -0.5. Top is at y = -0.5 + scale.y
-      // Center is halfway: y_center = (-0.5 + (-0.5 + scale.y)) / 2 = -0.5 + scale.y / 2
-      groupRef.current.position.y = -0.5 + (meshRef.current.scale.y / 2);
+        if (animationProgress.current < 1) {
+             animationProgress.current = Math.min(1, animationProgress.current + delta * ASSEMBLY_SPEED);
+        }
+        meshRef.current.scale.y = animationProgress.current;
+        groupRef.current.position.y = -0.5 + (meshRef.current.scale.y / 2);
+        textRef.current.position.y = (meshRef.current.scale.y / 2) + 0.1;
 
-       // Keep Text positioned relative to the top of the growing block
-       // Top surface Y relative to group center = scale.y / 2
-       // Add a small offset (0.1) to place text above
-       textRef.current.position.y = (meshRef.current.scale.y / 2) + 0.1;
+        const pulseFactor = Math.sin(state.clock.elapsedTime * 6) * 0.03 + 1.0;
+        targetScaleX = pulseFactor;
+        targetScaleZ = pulseFactor;
+        targetOpacity = Math.sin(state.clock.elapsedTime * 5) * 0.1 + animationProgress.current * 0.6 + 0.1;
+        targetEmissiveIntensity = Math.sin(state.clock.elapsedTime * 5) * 0.3 + 0.6;
 
+    } else if (isIdleAndReady) {
+        // --- Standard Hover Effect (When Ready to Mine) ---
+        targetWireframe = !hovered; // Become solid on hover when ready
+        targetOpacity = hovered ? 0.9 : 0.7;
+        targetEmissiveIntensity = hovered ? 0.4 : 0.2;
+        targetEmissiveColor = hovered ? new THREE.Color("#cccccc") : new THREE.Color("#999999");
+        const scaleHover = hovered ? 1.15 : 1.0;
+        targetScaleX = scaleHover;
+        targetScaleZ = scaleHover;
+         // Ensure correct scale/position when not mining
+         meshRef.current.scale.y = 1;
+         groupRef.current.position.y = 0;
+         textRef.current.position.y = 0.6; // Above full block
 
-      // --- Other Mining Visuals (Pulse, etc.) ---
-      const pulseFactor = Math.sin(state.clock.elapsedTime * 6) * 0.03 + 1.0; // Subtle size pulse
-      meshRef.current.scale.x = pulseFactor;
-      meshRef.current.scale.z = pulseFactor;
-      // Adjust opacity/emissive slightly for pulse effect
-      targetOpacity = Math.sin(state.clock.elapsedTime * 5) * 0.1 + animationProgress.current * 0.6 + 0.1; // Fade in opacity
-      targetEmissiveIntensity = Math.sin(state.clock.elapsedTime * 5) * 0.3 + 0.6;
-
-    } else {
-       // --- Standard Hover Effect (When Not Mining) ---
-        const targetScale = hovered ? 1.15 : 1.0;
-        // Lerp scale for hover effect (don't lerp Y scale, it's handled by useEffect/mining)
-        meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, targetScale, delta * 8);
-        meshRef.current.scale.z = THREE.MathUtils.lerp(meshRef.current.scale.z, targetScale, delta * 8);
-        // Ensure Y scale and group position are correct when not mining
+    } else { // isIdleAndEmpty
+        // --- Dimmed/Inactive State (When Mempool Empty) ---
+        targetColor = new THREE.Color("#aaaaaa");
+        targetOpacity = 0.4;
+        targetEmissiveIntensity = 0.1;
+        targetEmissiveColor = new THREE.Color("#666666");
+        targetWireframe = true; // Always wireframe when inactive
+        // Ensure correct scale/position
         meshRef.current.scale.y = 1;
         groupRef.current.position.y = 0;
-         textRef.current.position.y = 0.6; // Position above fully formed block
+        textRef.current.position.y = 0.6;
     }
 
-    // --- Apply Material Properties ---
-    meshRef.current.material.color.lerp(targetColor, delta * 10); // Faster color lerp
-    meshRef.current.material.opacity = THREE.MathUtils.lerp(
-        meshRef.current.material.opacity, targetOpacity, delta * 8
-    );
-    meshRef.current.material.emissiveIntensity = THREE.MathUtils.lerp(
-        meshRef.current.material.emissiveIntensity, targetEmissiveIntensity, delta * 8
-    );
-     meshRef.current.material.emissive.lerp(targetEmissiveColor, delta * 8);
-
-    // Wireframe depends only on mining state (instant change)
-    meshRef.current.material.wireframe = !isMining;
-
+    // --- Apply Lerped Properties ---
+    meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, targetScaleX, delta * 8);
+    meshRef.current.scale.z = THREE.MathUtils.lerp(meshRef.current.scale.z, targetScaleZ, delta * 8);
+    meshRef.current.material.color.lerp(targetColor, delta * 10);
+    meshRef.current.material.opacity = THREE.MathUtils.lerp(meshRef.current.material.opacity, targetOpacity, delta * 8);
+    meshRef.current.material.emissiveIntensity = THREE.MathUtils.lerp(meshRef.current.material.emissiveIntensity, targetEmissiveIntensity, delta * 8);
+    meshRef.current.material.emissive.lerp(targetEmissiveColor, delta * 8);
+    meshRef.current.material.wireframe = targetWireframe; // Can be instant or lerped if preferred
   });
 
   const handleClick = (event) => {
     event.stopPropagation();
-    if (!isMining) onMine();
+    // Only allow mining if not already mining AND mempool has transactions
+    if (!isMining && canMine) {
+        onMine();
+    }
   };
 
   const handlePointerOver = (event) => {
     event.stopPropagation();
-    if (!isMining) {
-      setHover(true);
-      document.body.style.cursor = 'pointer';
+    if (!isMining) { // Hover effect applies if ready or empty
+        setHover(true);
+        document.body.style.cursor = canMine ? 'pointer' : 'not-allowed';
     }
   };
 
   const handlePointerOut = (event) => {
     if (!isMining) {
-      setHover(false);
-      document.body.style.cursor = 'default'; // Use default cursor
+        setHover(false);
+        document.body.style.cursor = 'default';
     }
   };
 
   return (
-    // Use groupRef for position adjustments during animation
     <group ref={groupRef} position={position}>
       <mesh
         ref={meshRef}
         onClick={handleClick}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
-        // Set initial scale; useFrame will control it during animation
-        scale={[1, animationProgress.current, 1]}
+        scale={[1, animationProgress.current, 1]} // Initial Y scale set by progress
       >
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial
-          // Initial state set here, useFrame updates dynamically
-          color={"#ffffff"} // Start white
+          color={"#ffffff"}
           wireframe={!isMining}
-          opacity={isMining ? 0 : 0.7} // Start transparent if mining
+          opacity={isMining ? 0 : (canMine ? 0.7 : 0.4)}
           transparent={true}
           metalness={0.1}
           roughness={0.5}
@@ -158,18 +151,17 @@ const GhostBlock = ({ position, onMine, isMining }) => {
           emissiveIntensity={0.2}
         />
       </mesh>
-      {/* Text positioning is now relative to the group */}
       <Text
         ref={textRef}
-        position={[0, 0.6, 0]} // Initial position (will be updated)
+        position={[0, 0.6, 0]}
         fontSize={0.15}
-        color={isMining ? "#FFA500" : "white"}
+        color={isMining ? "#FFA500" : (canMine ? "white" : "#bbbbbb")}
         anchorX="center"
-        anchorY="middle" // Anchor text at its vertical middle
+        anchorY="middle"
         outlineWidth={0.01}
         outlineColor="#333"
       >
-        {isMining ? 'MINING...' : '+ Add New'}
+        {isMining ? miningText : hoverText}
       </Text>
     </group>
   );
